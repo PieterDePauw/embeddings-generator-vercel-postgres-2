@@ -18,8 +18,11 @@ jobs:
     test: # make sure the action works on a clean machine without building
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
-            - uses: ./
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Run the action
+              uses: ./
               with:
                   database-url: ${{ secrets.DATABASE_URL }}
                   openai-api-key: ${{ secrets.OPENAI_API_KEY }}
