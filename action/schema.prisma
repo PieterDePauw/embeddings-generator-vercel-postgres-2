@@ -24,14 +24,12 @@ model File {
 }
 
 model Embedding {
-  id            Int      @id @default(autoincrement())
-  filePath      String
-  chunkIndex    Int
-  content       String
-  embedding     Int[]
-  updatedAt     DateTime @default(now()) @updatedAt
-  latestRefresh DateTime @default(now()) @updatedAt
-  latestVersion String
+  id         Int      @id @default(autoincrement())
+  filePath   String
+  chunkIndex Int
+  content    String
+  embedding  Int[]
+  updatedAt  DateTime @default(now()) @updatedAt
 
   @@unique([filePath, chunkIndex])
 }

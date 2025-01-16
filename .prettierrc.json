@@ -6,7 +6,7 @@
 	"experimentalTernaries": true,
 	"htmlWhitespaceSensitivity": "css",
 	"jsxSingleQuote": false,
-	"printWidth": 185,
+	"printWidth": 260,
 	"proseWrap": "preserve",
 	"quoteProps": "preserve",
 	"semi": false,

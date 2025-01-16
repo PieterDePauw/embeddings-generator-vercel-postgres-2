@@ -30,7 +30,5 @@ model Embedding {
   content    String
   embedding  Int[]
   updatedAt  DateTime @updatedAt @default(now())
-  latestRefresh DateTime @updatedAt @default(now())
-  latestVersion String
   @@unique([filePath, chunkIndex])
 }

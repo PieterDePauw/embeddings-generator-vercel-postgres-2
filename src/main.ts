@@ -6,6 +6,7 @@
 
 // Import modules
 import * as core from "@actions/core"
+import * as dotenv from "dotenv"
 import crypto from "crypto"
 import { PrismaClient } from "@prisma/client"
 import { openai } from "@ai-sdk/openai"
@@ -18,18 +19,11 @@ const OPENAI_USER_ID = "user-id"
 const OPENAI_EMBEDDING_MODEL: EmbeddingModel = { name: "text-embedding-3-small", dimensions: 1536, pricing: 0.00002, maxRetries: 2 }
 const EMBEDDING_MODEL = openai.embedding(OPENAI_EMBEDDING_MODEL.name, { dimensions: OPENAI_EMBEDDING_MODEL.dimensions, user: OPENAI_USER_ID })
 
-// Initialize Prisma with the database URL from GitHub Secrets
-export function initializePrisma(): PrismaClient {
-	const databaseUrl = core.getInput("database-url")
-	if (!databaseUrl) throw new Error("Database URL is required to initialize Prisma.")
-	process.env.DATABASE_URL = databaseUrl
-	// Initialize PrismaClient with SSL configuration for cloud databases
-	const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } }, log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"] })
-	return prisma
-}
+// Initialize the environment variables from the .env file
+dotenv.config({ path: [".env.local", ".env"], override: true })
 
 // >> Initialize Prisma with the database URL
-const prisma = initializePrisma()
+const prisma = new PrismaClient({ datasources: { db: { url: core.getInput("database-url") } } })
 
 /**
  * @name generateVersionInfo
@@ -37,10 +31,10 @@ const prisma = initializePrisma()
  * @returns An object containing the refresh version and timestamp
  */
 function generateVersionInfo(): { refreshVersion: string; refreshDate: Date } {
-	return {
-		refreshVersion: process.env.GITHUB_SHA && process.env.GITHUB_SHA !== "NO_SHA_FOUND" ? process.env.GITHUB_SHA : crypto.randomUUID(),
-		refreshDate: new Date(),
-	}
+	// > Check if the GITHUB_SHA environment variable is set and not equal to "NO_SHA_FOUND"
+	const hasGithubSha: boolean = process.env.GITHUB_SHA && process.env.GITHUB_SHA !== "NO_SHA_FOUND"
+	// > Return the refresh version either as the GITHUB_SHA or a random UUID and the refresh date as the current timestamp
+	return { refreshVersion: hasGithubSha ? process.env.GITHUB_SHA : crypto.randomUUID(), refreshDate: new Date() }
 }
 
 /**
@@ -70,36 +64,38 @@ async function compareChecksum(filePath: string, hash: string): Promise<{ isFile
  * @returns An object containing the embeddings and total token usage
  */
 export async function embedSections(sections: Section[]): Promise<{ embeddings: number[][]; tokens: number; sections: Section[] }> {
+	// > Sort the sections based on the slug
 	const sectionsData: Section[] = sections.sort((a, b) => a.slug.localeCompare(b.slug))
+	// > Embed the sections using the OpenAI API
 	const result = await embedMany({ values: sectionsData.map((section) => section.content), model: EMBEDDING_MODEL, maxRetries: OPENAI_EMBEDDING_MODEL.maxRetries })
+	// > Return the embeddings, total token usage, and sections data
 	return { embeddings: result.embeddings, tokens: result.usage.tokens, sections: sectionsData }
 }
 
 // Function to run the action
 async function run(): Promise<void> {
 	try {
-		// >> Get the input for the database URL
+		// > Get the input for the database URL
 		const databaseUrl: string | undefined = core.getInput("database-url")
 		if (!databaseUrl) throw new Error("The inputs 'database-url' must be provided.")
 
-		// >> Get the input for the OpenAI API key
+		// > Get the input for the OpenAI API key
 		const openaiApiKey: string | undefined = core.getInput("openai-api-key")
 		if (!openaiApiKey) throw new Error("The inputs 'openai-api-key' must be provided.")
 
-		// >> Get the input for the docs root path
+		// > Get the input for the docs root path
 		const docsRootPath: string = core.getInput("docs-root-path") || "docs/"
 
 		// > Get the input for whether to refresh all embeddings or only the ones that have changed
-		const shouldRefresh: boolean = false
-		// const shouldRefresh: boolean = core.getInput("should-refresh") === "true" || false
+		const shouldRefresh: boolean = core.getInput("should-refresh") === "true" || false
 
-		// 0. Get the latest commit hash that triggered the workflow and generate a new refresh version and timestamp for the document
+		// > Get the latest commit hash that triggered the workflow and generate a new refresh version and timestamp for the document
 		const { refreshVersion, refreshDate } = generateVersionInfo()
 
-		// 1. Gather all .md / .mdx files in the content directory and subdirectories
+		// > Gather all .md / .mdx files in the content directory and subdirectories
 		const markdownFiles: MarkdownSourceType[] = await generateMarkdownSources({ docsRootPath: docsRootPath, ignoredFiles: ["pages/404.mdx"] })
 
-		// 2. Check if we should refresh all embeddings or only the ones that have changed
+		// A. Check if we should refresh all embeddings or only the ones that have changed
 		if (!shouldRefresh) {
 			// A. Process each file
 			for (const markdownFile of markdownFiles) {
@@ -117,53 +113,29 @@ async function run(): Promise<void> {
 				// > If the file was not found in the database or if the file was found and has changed, generate new embeddings for the file
 				if (!isFileFound || (isFileFound && isFileChanged)) {
 					// >> If the file was not found in the database, insert the file into the database
-					await prisma.file.create({
-						data: {
-							content: markdownFile.content,
-							filePath: markdownFile.path,
-							fileHash: markdownFile.checksum,
-							latestRefresh: refreshDate,
-							latestVersion: refreshVersion,
-							tokens: 0,
-						},
-					})
+					if (!isFileFound) {
+						const newFileData = { content: markdownFile.content, filePath: markdownFile.path, fileHash: markdownFile.checksum, tokens: 0, latestRefresh: refreshDate, latestVersion: refreshVersion }
+						await prisma.file.create({ data: newFileData })
+					}
 
 					// >> If the file has changed, delete existing embeddings for the file
 					if (isFileChanged) {
 						await prisma.embedding.deleteMany({ where: { filePath: markdownFile.path } })
 					}
 
-					// >> Generate embeddings for each chunk
+					// >> Generate embeddings for each section
 					const { embeddings, tokens, sections } = await embedSections(markdownFile.sections)
 
 					// >> If the file has changed, update the file in the database
-					await prisma.file.update({
-						where: { filePath: markdownFile.path },
-						data: {
-							content: markdownFile.content,
-							filePath: markdownFile.path,
-							fileHash: markdownFile.checksum,
-							latestRefresh: refreshDate,
-							latestVersion: refreshVersion,
-							tokens: tokens,
-						},
-					})
+					const updatedFileData = { content: markdownFile.content, filePath: markdownFile.path, fileHash: markdownFile.checksum, latestRefresh: refreshDate, latestVersion: refreshVersion, tokens: tokens }
+					await prisma.file.update({ where: { filePath: markdownFile.path }, data: updatedFileData })
 
 					// >> Insert the embeddings into the database
-					await prisma.embedding.createMany({
-						data: embeddings.map((embedding, index) => ({
-							filePath: markdownFile.path,
-							chunkIndex: index,
-							header: sections[index].heading,
-							slug: sections[index].slug,
-							content: sections[index].content,
-							embedding: embedding,
-							latestRefresh: refreshDate,
-							latestVersion: refreshVersion,
-						})),
-					})
+					const newEmbeddingData = embeddings.map((embedding, index) => ({ filePath: markdownFile.path, chunkIndex: index, header: sections[index].heading, slug: sections[index].slug, content: sections[index].content, embedding: embedding }))
+					await prisma.embedding.createMany({ data: newEmbeddingData })
 				}
 			}
+
 			// B. Delete all existing files from the database that were not found in the content directory
 			const existingFiles = await prisma.file.findMany()
 			const existingFilePaths = existingFiles.map((file) => file.filePath)
@@ -176,6 +148,8 @@ async function run(): Promise<void> {
 			const missingEmbeddings = existingEmbeddingPaths.filter((filePath) => !markdownFiles.some((markdownFile) => markdownFile.path === filePath))
 			await prisma.embedding.deleteMany({ where: { filePath: { in: missingEmbeddings } } })
 		}
+
+		// B. Refresh all embeddings for all files
 		if (shouldRefresh) {
 			// A. Delete all existing files from the database
 			await prisma.file.deleteMany({})
@@ -183,34 +157,16 @@ async function run(): Promise<void> {
 			await prisma.embedding.deleteMany({})
 			// C. Process each file
 			for (const markdownFile of markdownFiles) {
-				// > Get the sections from the markdown file and sort them based on the slug
+				// >> Generate embeddings for each section
 				const { embeddings, sections, tokens } = await embedSections(markdownFile.sections)
 
-				// > Insert the file into the database
-				await prisma.file.create({
-					data: {
-						content: markdownFile.content,
-						filePath: markdownFile.path,
-						fileHash: markdownFile.checksum,
-						latestRefresh: refreshDate,
-						latestVersion: refreshVersion,
-						tokens: tokens,
-					},
-				})
+				// >> Insert the file into the database
+				const fileData = { content: markdownFile.content, filePath: markdownFile.path, fileHash: markdownFile.checksum, tokens: tokens, latestRefresh: refreshDate, latestVersion: refreshVersion }
+				await prisma.file.create({ data: fileData })
 
-				// > Insert the embeddings into the database
-				await prisma.embedding.createMany({
-					data: embeddings.map((embedding, index) => ({
-						filePath: markdownFile.path,
-						chunkIndex: index,
-						header: sections[index].heading,
-						slug: sections[index].slug,
-						content: sections[index].content,
-						embedding: embedding,
-						latestRefresh: refreshDate,
-						latestVersion: refreshVersion,
-					})),
-				})
+				// >> Insert the embeddings into the database
+				const embeddingData = embeddings.map((embedding, index) => ({ filePath: markdownFile.path, chunkIndex: index, header: sections[index].heading, slug: sections[index].slug, content: sections[index].content, embedding: embedding }))
+				await prisma.embedding.createMany({ data: embeddingData })
 			}
 		}
 	} catch (error) {
