@@ -14,7 +14,6 @@ import { generateMarkdownSources } from "./markdown"
 import { type MarkdownSourceType, type EmbeddingModel, type Section } from "./types"
 
 // Define the constants
-const prisma = new PrismaClient()
 const OPENAI_USER_ID = "user-id"
 const OPENAI_EMBEDDING_MODEL: EmbeddingModel = { name: "text-embedding-3-small", dimensions: 1536, pricing: 0.00002, maxRetries: 2 }
 const EMBEDDING_MODEL = openai.embedding(OPENAI_EMBEDDING_MODEL.name, { dimensions: OPENAI_EMBEDDING_MODEL.dimensions, user: OPENAI_USER_ID })
@@ -28,6 +27,9 @@ export function initializePrisma(): PrismaClient {
 	const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } }, log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"] })
 	return prisma
 }
+
+// >> Initialize Prisma with the database URL
+const prisma = initializePrisma()
 
 /**
  * @name generateVersionInfo
@@ -90,9 +92,6 @@ async function run(): Promise<void> {
 		// > Get the input for whether to refresh all embeddings or only the ones that have changed
 		const shouldRefresh: boolean = false
 		// const shouldRefresh: boolean = core.getInput("should-refresh") === "true" || false
-
-		// >> Initialize Prisma with the database URL
-		const prisma = initializePrisma()
 
 		// 0. Get the latest commit hash that triggered the workflow and generate a new refresh version and timestamp for the document
 		const { refreshVersion, refreshDate } = generateVersionInfo()
@@ -159,6 +158,8 @@ async function run(): Promise<void> {
 							slug: sections[index].slug,
 							content: sections[index].content,
 							embedding: embedding,
+							latestRefresh: refreshDate,
+							latestVersion: refreshVersion,
 						})),
 					})
 				}
@@ -206,6 +207,8 @@ async function run(): Promise<void> {
 						slug: sections[index].slug,
 						content: sections[index].content,
 						embedding: embedding,
+						latestRefresh: refreshDate,
+						latestVersion: refreshVersion,
 					})),
 				})
 			}

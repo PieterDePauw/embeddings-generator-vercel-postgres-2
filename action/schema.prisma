@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model File {
+  id            Int      @id @default(autoincrement())
+  content       String
+  filePath      String   @unique
+  fileHash      String
+  latestVersion String
+  latestRefresh DateTime @default(now()) @updatedAt
+  tokens        Int
+}
+
+model Embedding {
+  id            Int      @id @default(autoincrement())
+  filePath      String
+  chunkIndex    Int
+  content       String
+  embedding     Int[]
+  updatedAt     DateTime @default(now()) @updatedAt
+  latestRefresh DateTime @default(now()) @updatedAt
+  latestVersion String
+
+  @@unique([filePath, chunkIndex])
+}

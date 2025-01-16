@@ -1,9 +1,9 @@
-name: "vercel-embeddings-action"
+name: "vercel-embeddings-action-2"
 description: "Generate embeddings from your knowledge base."
 author: "PieterDePauw"
 branding:
-  icon: "umbrella"
-  color: "yellow"
+    icon: "umbrella"
+    color: "yellow"
 inputs:
     database-url:
         required: true
