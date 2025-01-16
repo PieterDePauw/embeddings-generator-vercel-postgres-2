@@ -81655,7 +81655,7 @@ function generateVersionInfo() {
 function compareChecksum(filePath, hash) {
     return main_awaiter(this, void 0, void 0, function* () {
         // > Check if a file with the same path already exists in the database
-        const existingFile = yield prisma.file.findUnique({ where: { filePath } });
+        const existingFile = yield prisma.file.findUnique({ where: { filePath: filePath } });
         // > If the file does not exist, return that the file is not found
         if (!existingFile)
             return { isFileFound: false, isFileChanged: null };

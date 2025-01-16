@@ -15,7 +15,8 @@
         "postprisma:generate": "cp node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node dist/",
         "generate": "npx prisma generate",
         "postgenerate": "cp node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node dist/",
-		"all": "npm run format && npm run prisma:generate && npm run package"
+		"all": "npm run format && npm run prisma:generate && npm run package",
+        "seed": "npx ts-node  seed.ts"
 	},
 	"keywords": [
 		"actions",
