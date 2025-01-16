@@ -1,0 +1,31 @@
+// PRISMA DATABASE SCHEMA
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model File {
+  id    Int      @id @default(autoincrement())
+  content   String
+  filePath  String  @unique
+  fileHash  String
+  lastVersion String
+  lastRefresh   DateTime @updatedAt @default(now())
+}
+
+model Embedding {
+  id         Int      @id @default(autoincrement())
+  filePath   String
+  chunkIndex Int
+  content    String
+  embedding  String
+  updatedAt  DateTime @updatedAt @default(now())
+  lastRefresh   DateTime @updatedAt @default(now())
+  lastVersion String
+  @@unique([filePath, chunkIndex])
+}

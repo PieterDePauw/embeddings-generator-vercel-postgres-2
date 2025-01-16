@@ -1,0 +1,20 @@
+name: "vercel-embeddings-action"
+description: "Generate embeddings from your knowledge base."
+author: "PieterDePauw"
+branding:
+  icon: "umbrella"
+  color: "yellow"
+inputs:
+    database-url:
+        required: true
+        description: "Your Postgres database URL"
+    openai-api-key:
+        required: true
+        description: "Your OpenAI API key"
+    docs-root-path:
+        required: false
+        description: "The path to the root of your knowledge base / docs folder"
+        default: "docs/"
+runs:
+    using: "node20"
+    main: "dist/index.js"
