@@ -8,8 +8,8 @@
 		"format": "npx prettier --write '**/*.ts'",
 		"format-check": "npx prettier --check '**/*.ts'",
 		"lint": "npx eslint src/**/*.ts",
-		"package": "ncc build ./src/main.ts --out action --source-map --license licenses.txt",
-		"build": "npm run prisma:generate && ncc build ./src/main.ts --out action --source-map",
+		"package": "ncc build --source-map --license licenses.txt",
+		"build": "npm run prisma:generate && ncc build --out action --source-map",
 		"test": "jest",
 		"prisma:generate": "npx prisma generate",
 		"all": "npm run format && npm run prisma:generate && npm run package"
