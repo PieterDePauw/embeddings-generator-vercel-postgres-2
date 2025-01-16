@@ -46,7 +46,7 @@ function generateVersionInfo(): { refreshVersion: string; refreshDate: Date } {
  */
 async function compareChecksum(filePath: string, hash: string): Promise<{ isFileFound: boolean; isFileChanged: boolean | null }> {
 	// > Check if a file with the same path already exists in the database
-	const existingFile = await prisma.file.findUnique({ where: { filePath: filePath } })
+	const existingFile = await prisma.file.findUnique({ where: { filePath: { filePath } } })
 	// > If the file does not exist, return that the file is not found
 	if (!existingFile) return { isFileFound: false, isFileChanged: null }
 	// > If the file exists and the hash is the same, return that the file has not changed
