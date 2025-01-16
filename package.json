@@ -12,6 +12,9 @@
 		"build": "npm run prisma:generate && ncc build --out action --source-map",
 		"test": "jest",
 		"prisma:generate": "npx prisma generate",
+        "postprisma:generate": "cp node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node dist/",
+        "generate": "npx prisma generate",
+        "postgenerate": "cp node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node dist/",
 		"all": "npm run format && npm run prisma:generate && npm run package"
 	},
 	"keywords": [
