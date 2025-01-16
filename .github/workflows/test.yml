@@ -26,4 +26,4 @@ jobs:
               with:
                   database-url: ${{ secrets.DATABASE_URL }}
                   openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-                  docs-root-path: "docs/"
+                  docs-root-path: "docs"
