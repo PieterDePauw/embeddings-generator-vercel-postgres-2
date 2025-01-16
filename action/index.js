@@ -158,6 +158,10 @@ const config = {
         "fromEnvVar": null,
         "value": "darwin-arm64",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "debian-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -183,8 +187,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n\nmodel File {\n  id            Int      @id @default(autoincrement())\n  content       String\n  filePath      String   @unique\n  fileHash      String\n  latestVersion String\n  latestRefresh DateTime @default(now()) @updatedAt\n  tokens        Int\n}\n\nmodel Embedding {\n  id         Int      @id @default(autoincrement())\n  filePath   String\n  chunkIndex Int\n  content    String\n  embedding  Int[]\n  updatedAt  DateTime @default(now()) @updatedAt\n\n  @@unique([filePath, chunkIndex])\n}\n",
-  "inlineSchemaHash": "2d6b9eeaaf7e7328238cdb1f669c658518c0d046f23634d10514d8e6d472c0b9",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\nmodel File {\n  id            Int      @id @default(autoincrement())\n  content       String\n  filePath      String   @unique\n  fileHash      String\n  latestVersion String\n  latestRefresh DateTime @default(now()) @updatedAt\n  tokens        Int\n}\n\nmodel Embedding {\n  id         Int      @id @default(autoincrement())\n  filePath   String\n  chunkIndex Int\n  content    String\n  embedding  Int[]\n  updatedAt  DateTime @default(now()) @updatedAt\n\n  @@unique([filePath, chunkIndex])\n}\n",
+  "inlineSchemaHash": "721dd5f0b4f5167a524e4502ef4290bb9f89e7997ffb27ce6a6f2aa20802dc64",
   "copyEngine": true
 }
 
@@ -224,6 +228,10 @@ Object.assign(exports, Prisma)
 // file annotations for bundling tools to include these files
 __nccwpck_require__.ab + "client/libquery_engine-darwin-arm64.dylib.node"
 path.join(process.cwd(), "node_modules/.prisma/client/libquery_engine-darwin-arm64.dylib.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node");
+path.join(process.cwd(), "node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "node_modules/.prisma/client/schema.prisma")
