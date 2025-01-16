@@ -14,7 +14,7 @@ inputs:
     docs-root-path:
         required: false
         description: "The path to the root of your knowledge base / docs folder"
-        default: "docs/"
+        default: "docs"
 runs:
     using: "node20"
     main: "dist/index.js"

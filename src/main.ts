@@ -84,7 +84,7 @@ async function run(): Promise<void> {
 		if (!openaiApiKey) throw new Error("The inputs 'openai-api-key' must be provided.")
 
 		// > Get the input for the docs root path
-		const docsRootPath: string = core.getInput("docs-root-path") || "docs/"
+		const docsRootPath: string = core.getInput("docs-root-path") || "docs"
 
 		// > Get the input for whether to refresh all embeddings or only the ones that have changed
 		const shouldRefresh: boolean = core.getInput("should-refresh") === "true" || false

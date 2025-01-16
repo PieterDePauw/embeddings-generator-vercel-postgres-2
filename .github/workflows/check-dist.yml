@@ -40,7 +40,7 @@ jobs:
               with:
                   database-url: ${{ secrets.DATABASE_URL }}
                   openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-                  docs-root-path: "docs/"
+                  docs-root-path: "docs"
 
             # @kiwicopple: I've disabled this worklfow for now, as it's not working as expected. It will still output an error.
             # - name: Compare the expected and actual dist/ directories

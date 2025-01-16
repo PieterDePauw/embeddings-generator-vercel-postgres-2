@@ -81690,7 +81690,7 @@ function run() {
             if (!openaiApiKey)
                 throw new Error("The inputs 'openai-api-key' must be provided.");
             // > Get the input for the docs root path
-            const docsRootPath = core.getInput("docs-root-path") || "docs/";
+            const docsRootPath = core.getInput("docs-root-path") || "docs";
             // > Get the input for whether to refresh all embeddings or only the ones that have changed
             const shouldRefresh = core.getInput("should-refresh") === "true" || false;
             // > Get the latest commit hash that triggered the workflow and generate a new refresh version and timestamp for the document
