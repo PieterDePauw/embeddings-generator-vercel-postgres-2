@@ -30,7 +30,7 @@
 		"@ai-sdk/openai": "^1.0.20",
 		"@jest/globals": "^29.7.0",
 		"@prisma/client": "^6.2.1",
-		"ai": "^4.0.39",
+		"ai": "^4.1.16",
 		"dotenv": "^16.4.7",
 		"github-slugger": "^2.0.0",
 		"mdast": "^3.0.0",
