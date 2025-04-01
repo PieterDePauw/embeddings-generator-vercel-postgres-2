@@ -45,7 +45,7 @@
 	},
 	"devDependencies": {
 		"@types/estree": "^1.0.6",
-		"@types/node": "^22.10.7",
+		"@types/node": "^22.13.16",
 		"@types/uuid": "^10.0.0",
 		"@typescript-eslint/parser": "^8.20.0",
 		"@vercel/ncc": "^0.38.3",
